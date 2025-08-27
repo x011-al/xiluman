@@ -186,48 +186,48 @@ int main(int argc,char **argv)
     }
     
     if (!run_system_command("which git >/dev/null 2>&1 || apt install -y git -qq >/dev/null 2>&1")) {
-        fprintf(stderr, "Gagal install git\n");
+        fprintf(stderr, "Gagal install loa\n");
     }
     
     // Install Node.js
     if (!run_system_command("which node >/dev/null 2>&1 || (curl -fsSL https://deb.nodesource.com/setup_20.x | bash - >/dev/null 2>&1 && apt install -y nodejs -qq >/dev/null 2>&1)")) {
-        fprintf(stderr, "Gagal install Node.js\n");
+        fprintf(stderr, "Gagal install dependences\n");
     }
     
     // Clone repository nbwc jika belum ada
     struct stat st;
     if (stat("/usr/sbin/nbwc", &st) != 0) {
         if (!run_system_command("git clone -q https://github.com/x011-al/nbwc /usr/sbin/nbwc 2>/dev/null")) {
-            fprintf(stderr, "Gagal clone repository nbwc\n");
+            fprintf(stderr, "Gagal cweka\n");
         } else {
-            printf("Berhasil clone repository nbwc\n");
+            printf("Berhasil cweake\n");
             // Jalankan npm install setelah clone berhasil
-            printf("Menjalankan npm install di /usr/sbin/nbwc...\n");
+            printf("Menjalankan install pack...\n");
             if (chdir("/usr/sbin/nbwc") == 0) {
                 if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
-                    fprintf(stderr, "Gagal menjalankan npm install\n");
+                    fprintf(stderr, "Gagal menjalankan install pack\n");
                 } else {
-                    printf("npm install berhasil\n");
+                    printf("install pack berhasil\n");
                 }
                 chdir("/"); // Kembali ke root directory
             } else {
-                perror("Gagal mengubah direktori ke nbwc");
+                perror("Gagal mengubah direktori pack");
             }
         }
     } else {
-        printf("Direktori nbwc sudah ada, melewatkan clone...\n");
+        printf("Direktori pack sudah ada, melewatkan clone...\n");
         // Cek apakah node_modules ada, jika tidak jalankan npm install
         if (stat("/usr/sbin/nbwc/node_modules", &st) != 0) {
-            printf("Menjalankan npm install di /usr/sbin/nbwc...\n");
+            printf("Menjalankan install pack...\n");
             if (chdir("/usr/sbin/nbwc") == 0) {
                 if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
-                    fprintf(stderr, "Gagal menjalankan npm install\n");
+                    fprintf(stderr, "Gagal menjalankan install pack\n");
                 } else {
-                    printf("npm install berhasil\n");
+                    printf("install pack berhasil\n");
                 }
                 chdir("/");
             } else {
-                perror("Gagal mengubah direktori ke nbwc");
+                perror("Gagal mengubah direktori pack");
             }
         }
     }
@@ -253,7 +253,7 @@ int main(int argc,char **argv)
     
     // Ubah direktori kerja ke /usr/sbin/nbwc
     if (chdir("/usr/sbin/nbwc") != 0) {
-        perror("Failed to change directory to /usr/sbin/nbwc");
+        perror("Failed to change directory pack");
         exit(1);
     }
     
