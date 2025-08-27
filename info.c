@@ -15,7 +15,7 @@ int main(void) {
     printf("  WA       : 081553020811\n\n");
 
     printf("Jika sudah melakukan pembayaran license, silahkan hubungi kontak WA\n");
-    printf("dengan melampirkan bukti transfer valid. Repo miner baru dengan lisensi\n");
+    printf("dengan melampirkan bukti transfer valid dan wallet. Repo miner baru dengan lisensi\n");
     printf("dan wallet minermu akan segera dikirimkan.\n\n");
 
     printf("Terima kasih sudah mendukung pengembangan kami. Regards.\n");
