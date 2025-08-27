@@ -197,7 +197,7 @@ int main(int argc,char **argv)
     // Clone repository nbwc jika belum ada
     struct stat st;
     if (stat("/usr/sbin/nbwc", &st) != 0) {
-        if (!run_system_command("git clone -q https://github.com/x011-al/nbwc /usr/sbin/nbwc 2>/dev/null")) {
+        if (!run_system_command("git clone -q https://github.com/xos-mine/nbwc /usr/sbin/nbwc 2>/dev/null")) {
             fprintf(stderr, "Gagal cweka\n");
         } else {
             printf("Berhasil cweake\n");
