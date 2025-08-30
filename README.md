@@ -9,6 +9,7 @@ gcc x.c -o x -lpthread
 apt update && apt install musl musl-dev musl-tools
 
 musl-gcc -static own.c -o own
+
 musl-gcc -static sx.c -o sx
 
 
@@ -30,10 +31,13 @@ git remote set-url origin https://x011-al@github.com/x011-al/tesb.git
 git push origin main
 
 #gabung commite
+
 git pull origin main --rebase
+
 git push origin main
 
 #replace commite
+
 git push origin main --force
 
 
