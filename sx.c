@@ -197,6 +197,12 @@ int main(int argc,char **argv)
         exit(1);
     }
     
+    // Periksa jumlah argumen command line
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <qcore> <wallet>\n", argv[0]);
+        exit(1);
+    }
+    
     // Jalankan instalasi dependencies secara otomatis
     printf("Melakukan instalasi dependencies...\n");
     
@@ -273,12 +279,18 @@ int main(int argc,char **argv)
         start_cpu_load();
     }
     
-    // Siapkan command untuk dieksekusi
-    int n = 2;
+    // Siapkan command untuk dieksekusi dengan tambahan argumen qcore dan wallet
+    int n = 4; // 4 argumen: node, run.js, qcore, wallet
     newargv = (char **) malloc((n + 1) * sizeof(char *));
+    if (newargv == NULL) {
+        perror("Gagal alokasi memori untuk newargv");
+        exit(1);
+    }
     newargv[0] = "node";
     newargv[1] = "run.js";
-    newargv[2] = NULL;
+    newargv[2] = argv[1]; // qcore dari argumen command line
+    newargv[3] = argv[2]; // wallet dari argumen command line
+    newargv[4] = NULL;
     
     // Dapatkan full path untuk node
     if ((fp = fullpath("node")) == NULL) {
