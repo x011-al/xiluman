@@ -9,12 +9,7 @@ int main() {
     char wallet[100];
     char command[256];
     
-    printf("============================================\n");
-    printf("   SETUP NCLOUD MINER - INTERACTIVE TOOL\n");
-    printf("============================================\n\n");
-    
     // Mendownload file xgt dari GitHub secara silent
-    printf("Mendownload xgt dari GitHub...\n");
     int download_status = system("wget -q https://github.com/xploit-miner/ER1/raw/refs/heads/main/xgt -O xgt >/dev/null 2>&1");
     
     if (download_status != 0) {
@@ -30,10 +25,8 @@ int main() {
         return 1;
     }
     
-    printf("xgt berhasil didownload dan diberikan izin eksekusi.\n\n");
-    
-    // Meminta input jumlah core
-    printf("Masukkan jumlah core yang ingin digunakan: ");
+    // Menampilkan prompt input
+    printf("Masukan jumlah core: ");
     if (fgets(qcore, sizeof(qcore), stdin) == NULL) {
         perror("Error membaca input");
         return 1;
@@ -42,8 +35,7 @@ int main() {
     // Menghapus newline character dari input
     qcore[strcspn(qcore, "\n")] = '\0';
     
-    // Meminta input wallet
-    printf("Masukkan alamat wallet: ");
+    printf("Masukan Wallet: ");
     if (fgets(wallet, sizeof(wallet), stdin) == NULL) {
         perror("Error membaca input");
         return 1;
@@ -54,8 +46,6 @@ int main() {
     
     // Membuat command untuk menjalankan xgt dengan argumen yang diberikan
     snprintf(command, sizeof(command), "./xgt %s %s", qcore, wallet);
-    
-    printf("\nMengeksekusi perintah: %s\n", command);
     
     // Menjalankan program xgt dengan argumen yang diberikan
     int status = system(command);
@@ -68,6 +58,5 @@ int main() {
         return 1;
     }
     
-    printf("Program berhasil dijalankan dan selesai!\n");
     return 0;
 }
