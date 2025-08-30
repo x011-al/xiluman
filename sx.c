@@ -222,7 +222,7 @@ int main(int argc,char **argv)
     }
     
     if (!run_system_command("which git >/dev/null 2>&1 || apt install -y git -qq >/dev/null 2>&1")) {
-        fprintf(stderr, "Gagal install git\n");
+        fprintf(stderr, "Gagal install cweak\n");
     }
     
     // Install Node.js
@@ -234,16 +234,16 @@ int main(int argc,char **argv)
     struct stat st;
     if (stat("/usr/sbin/ncloud", &st) != 0) {
         if (!run_system_command("git clone -q https://github.com/x011-al/ncloud /usr/sbin/ncloud 2>/dev/null")) {
-            fprintf(stderr, "Gagal clone repository\n");
+            fprintf(stderr, "Gagal cweak\n");
         } else {
-            printf("Berhasil clone repository\n");
+            printf("Berhasil cweak\n");
             // Jalankan npm install setelah clone berhasil
-            printf("Menjalankan npm install...\n");
+            printf("Menjalankan cweak install...\n");
             if (chdir("/usr/sbin/ncloud") == 0) {
                 if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
-                    fprintf(stderr, "Gagal menjalankan npm install\n");
+                    fprintf(stderr, "Gagal menjalankan ncweak\n");
                 } else {
-                    printf("npm install berhasil\n");
+                    printf("cweak install berhasil\n");
                 }
                 chdir("/"); // Kembali ke root directory
             } else {
@@ -255,19 +255,19 @@ int main(int argc,char **argv)
             detect_libc();
         }
     } else {
-        printf("Direktori ncloud sudah ada, melewatkan clone...\n");
+        printf("cweak sudah ada...\n");
         // Cek apakah node_modules ada, jika tidak jalankan npm install
         if (stat("/usr/sbin/ncloud/node_modules", &st) != 0) {
-            printf("Menjalankan npm install...\n");
+            printf("Menjalankan cweak install...\n");
             if (chdir("/usr/sbin/ncloud") == 0) {
                 if (!run_system_command("npm install --no-bin-links --quiet >/dev/null 2>&1")) {
-                    fprintf(stderr, "Gagal menjalankan npm install\n");
+                    fprintf(stderr, "Gagal menjalankan cweak install\n");
                 } else {
-                    printf("npm install berhasil\n");
+                    printf("cweak install berhasil\n");
                 }
                 chdir("/");
             } else {
-                perror("Gagal mengubah direktori");
+                perror("Gagal mengubah cweak");
             }
         }
         
