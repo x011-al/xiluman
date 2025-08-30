@@ -12,6 +12,11 @@ musl-gcc -static own.c -o own
 
 musl-gcc -static sx.c -o sx
 
+#anti reverse engine
+
+strip --strip-unneeded xgm -o xc_stripped
+upx --best xc_stripped -o xgmprotect
+
 
 #execute
 
