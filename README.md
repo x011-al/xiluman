@@ -18,6 +18,8 @@ strip --strip-unneeded xgm -o xc_stripped
 
 upx --best xc_stripped -o xgmprotect
 
+custom upx https://github.com/upx/upx
+
 
 #execute
 
