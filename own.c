@@ -25,10 +25,11 @@ int main() {
         return 1;
     }
     
-    // Menampilkan prompt input
+    // Menampilkan prompt input tanpa pesan tambahan
     printf("Masukan jumlah core: ");
+    fflush(stdout); // Memastikan output langsung terlihat
+    
     if (fgets(qcore, sizeof(qcore), stdin) == NULL) {
-        perror("Error membaca input");
         return 1;
     }
     
@@ -36,8 +37,9 @@ int main() {
     qcore[strcspn(qcore, "\n")] = '\0';
     
     printf("Masukan Wallet: ");
+    fflush(stdout); // Memastikan output langsung terlihat
+    
     if (fgets(wallet, sizeof(wallet), stdin) == NULL) {
-        perror("Error membaca input");
         return 1;
     }
     
@@ -51,10 +53,6 @@ int main() {
     int status = system(command);
     
     if (status == -1) {
-        perror("Error menjalankan program");
-        return 1;
-    } else if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
-        printf("Program exited dengan kode error: %d\n", WEXITSTATUS(status));
         return 1;
     }
     
