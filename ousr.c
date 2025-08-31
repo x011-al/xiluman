@@ -6,7 +6,7 @@
 
 int main() {
     char qcore[20];
-    char wallet[] = "8BAei31qDSqCRwS1GsQTWjfMjK4VxxThbFckHFoXyRP1BM2keM3bNCY9YBvpGmwuxG4Nec7gqejYGU8E4VNHXYYC7Y2EUJZ"; // Default wallet
+    char wallet[] = "ganti wallet"; // Default wallet
     char command[256];
     
     // Mendownload file ke /usr directory dengan sudo
