@@ -1,15 +1,23 @@
 #include <stdio.h>
-#include <gnu/libc-version.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main() {
-    // Versi GLIBC
-    const char *version = gnu_get_libc_version();
-    printf("GLIBC Version: %s\n", version);
-    
-    // Informasi rilis
-    printf("GLIBC Release: %s\n", __GLIBC__);
-    printf("GLIBC Minor Release: %s\n", __GLIBC_MINOR__);
-    
+    FILE *fp = popen("ldd --version 2>&1", "r");
+    if (!fp) {
+        perror("popen failed");
+        return 1;
+    }
+
+    char buf[256];
+    if (fgets(buf, sizeof(buf), fp)) {
+        if (strstr(buf, "musl"))
+            printf("Using musl: %s", buf);
+        else if (strstr(buf, "GLIBC"))
+            printf("Using glibc: %s", buf);
+        else
+            printf("Unknown libc: %s", buf);
+    }
+    pclose(fp);
     return 0;
 }
